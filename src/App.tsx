@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import type {
   DependencyStatus,
+  DownloadErrorKind,
   DownloadFormat,
   HistoryItem,
   Job,
@@ -64,6 +65,42 @@ interface PlaylistState {
   title: string;
   items: PlaylistDraft[];
   cookieBrowser?: "chrome";
+}
+interface AppMessage {
+  kind: "error" | "info" | "success";
+  text: string;
+  code?: DownloadErrorKind;
+  retry?: { url: string; format: DownloadFormat };
+}
+
+function normalizedError(error: unknown): {
+  kind: DownloadErrorKind;
+  message: string;
+} {
+  if (error && typeof error === "object") {
+    const candidate = error as { kind?: unknown; message?: unknown };
+    if (
+      typeof candidate.kind === "string" &&
+      typeof candidate.message === "string"
+    ) {
+      return {
+        kind: candidate.kind as DownloadErrorKind,
+        message: candidate.message,
+      };
+    }
+  }
+  if (typeof error === "string") {
+    try {
+      const parsed = JSON.parse(error) as { kind?: string; message?: string };
+      if (parsed.kind && parsed.message) {
+        return {
+          kind: parsed.kind as DownloadErrorKind,
+          message: parsed.message,
+        };
+      }
+    } catch {}
+  }
+  return { kind: "other", message: String(error).replace(/^Error:\s*/, "") };
 }
 
 function secondsToTime(seconds: number | null) {
@@ -129,10 +166,7 @@ export default function App() {
   const [playlist, setPlaylist] = useState<PlaylistState | null>(null);
   const [fetching, setFetching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<{
-    kind: "error" | "info" | "success";
-    text: string;
-  } | null>(null);
+  const [message, setMessage] = useState<AppMessage | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -239,9 +273,15 @@ export default function App() {
         }
         setUrl("");
       } catch (error) {
+        const classified = normalizedError(error);
         setMessage({
           kind: "error",
-          text: String(error).replace(/^Error:\s*/, ""),
+          text: classified.message,
+          code: classified.kind,
+          retry:
+            classified.kind === "auth_required" && !cookieBrowser
+              ? { url: target, format: chosenFormat }
+              : undefined,
         });
       } finally {
         setFetching(false);
@@ -321,6 +361,7 @@ export default function App() {
                   eta: payload.eta,
                   outputPath: payload.output_path,
                   error: payload.error,
+                  errorKind: payload.error_kind,
                 }
               : job,
           ),
@@ -599,6 +640,18 @@ export default function App() {
           aria-live="polite"
         >
           <span>{message.text}</span>
+          {message.retry && (
+            <button
+              className="toast-action"
+              onClick={() => {
+                const retry = message.retry;
+                setMessage(null);
+                if (retry) void inspectUrl(retry.url, retry.format, "chrome");
+              }}
+            >
+              Use Chrome sign-in
+            </button>
+          )}
           <button aria-label="Dismiss message" onClick={() => setMessage(null)}>
             <X size={14} />
           </button>
@@ -782,6 +835,19 @@ export default function App() {
                                 status: "waiting",
                                 progress: 0,
                                 error: undefined,
+                                errorKind: undefined,
+                                cookieBrowser:
+                                  item.errorKind === "auth_required"
+                                    ? "chrome"
+                                    : item.cookieBrowser,
+                                quality:
+                                  item.errorKind === "no_compatible_format"
+                                    ? "best"
+                                    : item.quality,
+                                audioFormat:
+                                  item.errorKind === "no_compatible_format"
+                                    ? "original"
+                                    : item.audioFormat,
                               }
                             : item,
                         ),
@@ -1156,8 +1222,20 @@ function JobRow({
           </div>
         )}
         {job.error && (
-          <div className="job-error" title={job.error}>
-            {job.error}
+          <div
+            className={`job-error error-${job.errorKind || "other"}`}
+            title={job.error}
+          >
+            {job.errorKind === "auth_required" && (
+              <strong>Sign-in required</strong>
+            )}
+            {job.errorKind === "drm_protected" && (
+              <strong>DRM protected</strong>
+            )}
+            {job.errorKind === "no_compatible_format" && (
+              <strong>No compatible format</strong>
+            )}
+            <span>{job.error}</span>
           </div>
         )}
       </div>
@@ -1199,6 +1277,14 @@ function JobRow({
             title="Cancel"
           >
             <X size={17} />
+          </button>
+        ) : job.status === "failed" && job.errorKind === "drm_protected" ? (
+          <button
+            onClick={onRemove}
+            aria-label="Remove from queue"
+            title="Remove"
+          >
+            <Trash2 size={16} />
           </button>
         ) : job.status === "failed" || job.status === "cancelled" ? (
           <button onClick={onRetry} aria-label="Retry download" title="Retry">

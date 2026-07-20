@@ -90,6 +90,13 @@ struct ProgressEvent {
     eta: Option<String>,
     output_path: Option<String>,
     error: Option<String>,
+    error_kind: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct CommandError {
+    kind: String,
+    message: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -269,7 +276,7 @@ fn get_initial_deep_links(app: AppHandle) -> Vec<String> {
 async fn fetch_metadata(
     url: String,
     cookie_browser: Option<String>,
-) -> Result<Vec<VideoInfo>, String> {
+) -> Result<Vec<VideoInfo>, CommandError> {
     let mut args = vec![
         "--dump-single-json".to_string(),
         "--flat-playlist".to_string(),
@@ -283,12 +290,21 @@ async fn fetch_metadata(
         .args(args)
         .output()
         .await
-        .map_err(ytdlp_error)?;
+        .map_err(|error| CommandError {
+            kind: "other".into(),
+            message: ytdlp_error(error),
+        })?;
     if !output.status.success() {
-        return Err(last_error(&output.stderr));
+        return Err(classify_download_error(
+            &last_error(&output.stderr),
+            cookie_browser.as_deref() == Some("chrome"),
+        ));
     }
     let value: serde_json::Value =
-        serde_json::from_slice(&output.stdout).map_err(|error| error.to_string())?;
+        serde_json::from_slice(&output.stdout).map_err(|error| CommandError {
+            kind: "other".into(),
+            message: error.to_string(),
+        })?;
     let is_playlist = value
         .get("entries")
         .and_then(|entry| entry.as_array())
@@ -497,6 +513,88 @@ fn progress_event(job_id: &str, status: &str, progress: f64) -> ProgressEvent {
         eta: None,
         output_path: None,
         error: None,
+        error_kind: None,
+    }
+}
+
+fn classify_download_error(raw: &str, used_chrome: bool) -> CommandError {
+    let lower = raw.to_lowercase();
+    let drm = [
+        "drm protected",
+        "drm-protected",
+        "protected by drm",
+        "this video is drm",
+        "widevine",
+    ]
+    .iter()
+    .any(|pattern| lower.contains(pattern));
+    if drm {
+        return CommandError {
+            kind: "drm_protected".into(),
+            message: "This video is DRM-protected. MacTube can authenticate your account, but yt-dlp cannot decrypt the media.".into(),
+        };
+    }
+
+    let authentication = [
+        "sign in",
+        "login required",
+        "authentication required",
+        "this video is private",
+        "private video",
+        "members-only",
+        "members only",
+        "confirm your age",
+        "age-restricted",
+        "age restricted",
+        "cookies are required",
+    ]
+    .iter()
+    .any(|pattern| lower.contains(pattern));
+    if authentication {
+        return CommandError {
+            kind: "auth_required".into(),
+            message: if used_chrome {
+                "Chrome sign-in could not access this video. Open it successfully in Chrome, refresh the page, and try again.".into()
+            } else {
+                "This video requires sign-in. Retry with “Use Chrome sign-in” enabled in the extension.".into()
+            },
+        };
+    }
+
+    let no_format = [
+        "requested format is not available",
+        "no video formats found",
+        "no compatible formats",
+        "no formats found",
+        "only images are available",
+        "no downloadable formats",
+    ]
+    .iter()
+    .any(|pattern| lower.contains(pattern));
+    if no_format {
+        return CommandError {
+            kind: "no_compatible_format".into(),
+            message: "You’re signed in, but no compatible non-DRM stream was offered. Try Best available video or Original audio.".into(),
+        };
+    }
+
+    CommandError {
+        kind: "other".into(),
+        message: raw.trim().to_string(),
+    }
+}
+
+fn set_event_error(event: &mut ProgressEvent, error: CommandError) {
+    event.error_kind = Some(error.kind);
+    event.error = Some(error.message);
+}
+
+fn failure_notification_title(kind: Option<&str>) -> &'static str {
+    match kind {
+        Some("auth_required") => "Sign-in required",
+        Some("drm_protected") => "DRM-protected video",
+        Some("no_compatible_format") => "No compatible format",
+        _ => "Download failed",
     }
 }
 
@@ -690,7 +788,13 @@ async fn run_download(
         Ok(child) => child,
         Err(error) => {
             let mut event = progress_event(&request.job_id, "failed", 0.0);
-            event.error = Some(ytdlp_error(error));
+            set_event_error(
+                &mut event,
+                CommandError {
+                    kind: "other".into(),
+                    message: ytdlp_error(error),
+                },
+            );
             emit_progress(&app, event);
             notify(&app, "Download couldn’t start", &request.title);
             return;
@@ -789,7 +893,13 @@ async fn run_download(
             Ok(Err(error)) => {
                 remove_process(&app, &request.job_id);
                 let mut event = progress_event(&request.job_id, "failed", 0.0);
-                event.error = Some(error.to_string());
+                set_event_error(
+                    &mut event,
+                    CommandError {
+                        kind: "other".into(),
+                        message: error.to_string(),
+                    },
+                );
                 emit_progress(&app, event);
                 notify(&app, "Download failed", &request.title);
                 return;
@@ -819,14 +929,25 @@ async fn run_download(
                 .find(|line| !line.trim().is_empty())
                 .cloned()
                 .unwrap_or_else(|| "Download failed".into());
+            let classified = classify_download_error(
+                &error,
+                request.cookie_browser.as_deref() == Some("chrome"),
+            );
+            let notification_title = failure_notification_title(Some(&classified.kind));
             let mut event = progress_event(&request.job_id, "failed", 0.0);
-            event.error = Some(error);
+            set_event_error(&mut event, classified);
             emit_progress(&app, event);
-            notify(&app, "Download failed", &request.title);
+            notify(&app, notification_title, &request.title);
         }
         Err(error) => {
             let mut event = progress_event(&request.job_id, "failed", 0.0);
-            event.error = Some(error.to_string());
+            set_event_error(
+                &mut event,
+                CommandError {
+                    kind: "other".into(),
+                    message: error.to_string(),
+                },
+            );
             emit_progress(&app, event);
             notify(&app, "Download failed", &request.title);
         }
@@ -1083,5 +1204,27 @@ mod tests {
     #[test]
     fn errors_use_the_last_non_empty_line() {
         assert_eq!(last_error(b"warning\n\nactual failure\n"), "actual failure");
+    }
+
+    #[test]
+    fn distinguishes_authentication_drm_and_format_failures() {
+        assert_eq!(
+            classify_download_error("Sign in to confirm your age", false).kind,
+            "auth_required"
+        );
+        assert_eq!(
+            classify_download_error("This video is DRM protected", true).kind,
+            "drm_protected"
+        );
+        assert_eq!(
+            classify_download_error("Requested format is not available", true).kind,
+            "no_compatible_format"
+        );
+    }
+
+    #[test]
+    fn authenticated_failures_do_not_ask_for_chrome_again() {
+        let error = classify_download_error("Login required", true);
+        assert!(error.message.contains("Chrome sign-in could not access"));
     }
 }

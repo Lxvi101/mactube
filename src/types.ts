@@ -9,6 +9,8 @@ export type JobStatus =
   | "complete"
   | "failed"
   | "cancelled";
+export type DownloadErrorKind =
+  "auth_required" | "drm_protected" | "no_compatible_format" | "other";
 
 export interface VideoInfo {
   id: string;
@@ -35,6 +37,7 @@ export interface Job {
   eta?: string;
   outputPath?: string;
   error?: string;
+  errorKind?: DownloadErrorKind;
 }
 
 export interface Settings {
@@ -55,6 +58,7 @@ export interface ProgressEvent {
   eta?: string;
   output_path?: string;
   error?: string;
+  error_kind?: DownloadErrorKind;
 }
 
 export interface HistoryItem {

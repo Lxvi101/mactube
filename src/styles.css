@@ -121,6 +121,15 @@ select:focus-visible {
   place-items: center;
   cursor: pointer;
 }
+.toast .toast-action {
+  width: auto;
+  padding: 0 9px;
+  white-space: nowrap;
+  border: 1px solid #e7a28f;
+  border-radius: 7px;
+  color: #a6402e;
+  font-weight: 600;
+}
 @keyframes toastIn {
   from {
     opacity: 0;
@@ -1225,6 +1234,30 @@ main {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.job-error strong {
+  flex: none;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #f5deda;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  font-size: 8px;
+}
+.job-error span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.job-error.error-drm_protected strong {
+  background: #e7e3f2;
+  color: #5d4b91;
+}
+.job-error.error-no_compatible_format strong {
+  background: #f2ead8;
+  color: #856429;
 }
 .job-controls button {
   width: 32px;

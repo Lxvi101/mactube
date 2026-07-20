@@ -13,6 +13,7 @@ A minimal, macOS-first video, playlist, and music downloader built with Tauri 2,
 - Accepts one-click jobs from the included Chrome extension through `mactube://` links.
 - Can ask yt-dlp to use the local Chrome profile for videos the signed-in user can access; cookie values never enter the deep link.
 - Keeps a local download history, skips duplicates, reveals saved files in Finder, and sends native completion/failure notifications.
+- Distinguishes sign-in failures, DRM protection, and missing compatible non-DRM formats with tailored recovery actions.
 - Lives quietly in the macOS menu bar; closing the window hides it while downloads continue.
 - Shows live aggregate progress in the menu-bar title and per-download progress bars in its menu.
 - Can launch hidden at login when the opt-in preference is enabled.

@@ -18,6 +18,7 @@ export function recoverJobs(serialized: string | null): Job[] {
         speed: undefined,
         eta: undefined,
         error: undefined,
+        errorKind: undefined,
       }));
   } catch {
     return [];
