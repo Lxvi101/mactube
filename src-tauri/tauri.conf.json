@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MacTube",
+  "version": "0.1.0",
+  "identifier": "com.mactube.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [{
+      "title": "MacTube",
+      "width": 1040,
+      "height": 760,
+      "minWidth": 680,
+      "minHeight": 620,
+      "resizable": true,
+      "fullscreen": false,
+      "titleBarStyle": "Overlay",
+      "hiddenTitle": true,
+      "trafficLightPosition": { "x": 18, "y": 22 },
+      "backgroundColor": "#F5F4F0"
+    }],
+    "security": { "csp": "default-src 'self'; img-src 'self' asset: https: data:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost" }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg", "app"],
+    "category": "Utility",
+    "shortDescription": "Save videos and playlists beautifully.",
+    "longDescription": "A lightweight, private video and playlist downloader powered by yt-dlp.",
+    "macOS": { "minimumSystemVersion": "11.0" }
+  },
+  "plugins": { "deep-link": { "desktop": { "schemes": ["mactube"] } } }
+}

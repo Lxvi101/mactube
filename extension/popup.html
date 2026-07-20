@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div class="mark">↓</div>
+      <div><strong>MacTube</strong><span>Save this video</span></div>
+    </header>
+    <label class="auth"
+      ><span
+        ><strong>Use Chrome sign-in</strong
+        ><small>For private, paid, or age-restricted videos</small></span
+      ><input id="cookies" type="checkbox" /><i></i
+    ></label>
+    <button id="video">
+      <i>▶</i
+      ><span
+        ><strong>Download video</strong
+        ><small>Best available quality</small></span
+      ><b>›</b>
+    </button>
+    <button id="audio">
+      <i>♫</i
+      ><span
+        ><strong>Download music</strong
+        ><small>Original full-quality audio</small></span
+      ><b>›</b>
+    </button>
+    <div id="status" role="status" aria-live="polite">
+      Opens privately in the MacTube app
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

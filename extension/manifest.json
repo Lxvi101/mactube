@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "MacTube",
+  "version": "0.1.0",
+  "description": "Send videos and music straight to MacTube.",
+  "permissions": ["activeTab", "contextMenus", "tabs"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtu.be/*",
+    "https://music.youtube.com/*"
+  ],
+  "action": {
+    "default_title": "Open in MacTube",
+    "default_popup": "popup.html"
+  },
+  "background": { "service_worker": "background.js" }
+}
