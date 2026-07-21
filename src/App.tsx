@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
-  ArrowDown,
   Check,
   ChevronDown,
   CircleAlert,
@@ -39,6 +38,7 @@ import type {
   VideoInfo,
 } from "./types";
 import { parseRanges, recoverJobs } from "./queue";
+import appIcon from "../assets/app-icon.svg";
 
 const QUEUE_KEY = "mactube.queue.v2";
 const isTauri = () => "__TAURI_INTERNALS__" in window;
@@ -174,7 +174,6 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "done">(
     "all",
   );
-  const [visibleLimit, setVisibleLimit] = useState(50);
   const [dependencies, setDependencies] = useState<DependencyStatus | null>(
     null,
   );
@@ -575,7 +574,6 @@ export default function App() {
       ),
     [jobs, activeFilter],
   );
-  const visibleJobs = filteredJobs.slice(0, visibleLimit);
   const active = jobs.filter((job) =>
     ["queued", "downloading", "paused", "processing"].includes(job.status),
   ).length;
@@ -589,7 +587,7 @@ export default function App() {
       <header className="titlebar" data-tauri-drag-region>
         <div className="brand" data-tauri-drag-region>
           <div className="brand-mark">
-            <ArrowDown size={15} />
+            <img src={appIcon} alt="" />
           </div>
           <span>MacTube</span>
         </div>
@@ -658,262 +656,254 @@ export default function App() {
         </div>
       )}
 
-      {view === "queue" ? (
-        <>
-          <section className="hero">
-            <div className="eyebrow">
-              <Sparkles size={13} /> Your videos, beautifully offline
-            </div>
-            <h1>Save what you love.</h1>
-            <p>Videos, playlists, and audio. Fast, private, and yours.</p>
-            <div
-              className={`url-box ${message?.kind === "error" ? "has-error" : ""}`}
-            >
-              <Link2 size={19} />
-              <input
-                ref={inputRef}
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                onKeyDown={(event) => event.key === "Enter" && addUrl()}
-                placeholder="Paste a video or playlist link…"
-                spellCheck={false}
-                autoFocus
-                aria-label="Video or playlist URL"
-              />
-              {url && (
-                <button
-                  className="clear"
-                  aria-label="Clear URL"
-                  onClick={() => setUrl("")}
-                >
-                  <X size={15} />
-                </button>
-              )}
-              <button
-                className="add-button"
-                disabled={!url.trim() || fetching}
-                onClick={addUrl}
-              >
-                {fetching ? (
-                  <LoaderCircle className="spin" size={17} />
-                ) : (
-                  <Plus size={17} />
-                )}
-                <span>{fetching ? "Reading link…" : "Add"}</span>
-              </button>
-            </div>
-            <div className="quick-options">
-              <Segmented
-                value={format}
-                onChange={(value) => setFormat(value as DownloadFormat)}
-                items={[
-                  { value: "video", label: "Video", icon: <Video size={14} /> },
-                  {
-                    value: "audio",
-                    label: "Audio",
-                    icon: <Headphones size={14} />,
-                  },
-                ]}
-              />
-              <div className="quality-control">
-                <button
-                  className="quality-trigger"
-                  aria-expanded={qualityOpen}
-                  onClick={() => setQualityOpen((open) => !open)}
-                >
-                  <Gauge size={14} />
-                  <span>
-                    {format === "audio"
-                      ? audioLabel(settings.audio_format)
-                      : qualityLabel(quality)}
-                  </span>
-                  <ChevronDown size={13} />
-                </button>
-                {qualityOpen && (
-                  <QualityMenu
-                    format={format}
-                    quality={quality}
-                    audioFormat={settings.audio_format}
-                    onVideo={(value) => {
-                      setQuality(value);
-                      setQualityOpen(false);
-                    }}
-                    onAudio={(value) => {
-                      void saveSettings({ ...settings, audio_format: value });
-                      setQualityOpen(false);
-                    }}
-                    onClose={() => setQualityOpen(false)}
-                  />
-                )}
+      <div className={`app-content ${view}-content`}>
+        {view === "queue" ? (
+          <>
+            <section className="hero">
+              <div className="eyebrow">
+                <Sparkles size={13} /> Your videos, beautifully offline
               </div>
-              <button
-                className="folder-pill"
-                onClick={chooseFolder}
-                title={settings.output_dir}
+              <h1>Save what you love.</h1>
+              <p>Videos, playlists, and audio. Fast, private, and yours.</p>
+              <div
+                className={`url-box ${message?.kind === "error" ? "has-error" : ""}`}
               >
-                <Folder size={14} />
-                <span>
-                  {settings.output_dir.split("/").pop() || "Downloads"}
-                </span>
-              </button>
-            </div>
-          </section>
-          <section className="queue-section">
-            <div className="queue-head">
-              <div>
-                <h2>Queue</h2>
-                <span>
-                  {jobs.length
-                    ? `${jobs.length} ${jobs.length === 1 ? "item" : "items"}`
-                    : "Ready when you are"}
-                </span>
-              </div>
-              <div className="queue-actions">
-                {jobs.length > 0 && (
-                  <div className="filters">
-                    {(["all", "active", "done"] as const).map((filter) => (
-                      <button
-                        key={filter}
-                        className={activeFilter === filter ? "active" : ""}
-                        onClick={() => {
-                          setActiveFilter(filter);
-                          setVisibleLimit(50);
-                        }}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {jobs.length > 0 && (
+                <Link2 size={19} />
+                <input
+                  ref={inputRef}
+                  value={url}
+                  onChange={(event) => setUrl(event.target.value)}
+                  onKeyDown={(event) => event.key === "Enter" && addUrl()}
+                  placeholder="Paste a video or playlist link…"
+                  spellCheck={false}
+                  autoFocus
+                  aria-label="Video or playlist URL"
+                />
+                {url && (
                   <button
-                    className="text-button danger"
-                    onClick={() =>
-                      setJobs((current) =>
-                        current.filter((job) =>
-                          [
-                            "queued",
-                            "downloading",
-                            "paused",
-                            "processing",
-                          ].includes(job.status),
-                        ),
-                      )
-                    }
+                    className="clear"
+                    aria-label="Clear URL"
+                    onClick={() => setUrl("")}
                   >
-                    <Trash2 size={14} />
-                    Clear inactive
+                    <X size={15} />
                   </button>
                 )}
+                <button
+                  className="add-button"
+                  disabled={!url.trim() || fetching}
+                  onClick={addUrl}
+                >
+                  {fetching ? (
+                    <LoaderCircle className="spin" size={17} />
+                  ) : (
+                    <Plus size={17} />
+                  )}
+                  <span>{fetching ? "Reading link…" : "Add"}</span>
+                </button>
               </div>
-            </div>
-            {!jobs.length ? (
-              <EmptyState onFocus={() => inputRef.current?.focus()} />
-            ) : (
-              <div className="job-list">
-                {visibleJobs.map((job) => (
-                  <JobRow
-                    key={job.id}
-                    job={job}
-                    onRemove={() =>
-                      setJobs((current) =>
-                        current.filter((item) => item.id !== job.id),
-                      )
-                    }
-                    onCancel={() => void jobAction("cancel_download", job.id)}
-                    onPause={() => void jobAction("pause_download", job.id)}
-                    onResume={() => void jobAction("resume_download", job.id)}
-                    onReveal={() =>
-                      job.outputPath && void reveal(job.outputPath)
-                    }
-                    onRetry={() =>
-                      setJobs((current) =>
-                        current.map((item) =>
-                          item.id === job.id
-                            ? {
-                                ...item,
-                                status: "waiting",
-                                progress: 0,
-                                error: undefined,
-                                errorKind: undefined,
-                                cookieBrowser:
-                                  item.errorKind === "auth_required"
-                                    ? "chrome"
-                                    : item.cookieBrowser,
-                                quality:
-                                  item.errorKind === "no_compatible_format"
-                                    ? "best"
-                                    : item.quality,
-                                audioFormat:
-                                  item.errorKind === "no_compatible_format"
-                                    ? "original"
-                                    : item.audioFormat,
-                              }
-                            : item,
-                        ),
-                      )
-                    }
-                  />
-                ))}
-                {visibleJobs.length < filteredJobs.length && (
+              <div className="quick-options">
+                <Segmented
+                  value={format}
+                  onChange={(value) => setFormat(value as DownloadFormat)}
+                  items={[
+                    {
+                      value: "video",
+                      label: "Video",
+                      icon: <Video size={14} />,
+                    },
+                    {
+                      value: "audio",
+                      label: "Audio",
+                      icon: <Headphones size={14} />,
+                    },
+                  ]}
+                />
+                <div className="quality-control">
                   <button
-                    className="load-more"
-                    onClick={() => setVisibleLimit((limit) => limit + 50)}
+                    className="quality-trigger"
+                    aria-expanded={qualityOpen}
+                    onClick={() => setQualityOpen((open) => !open)}
                   >
-                    Show 50 more{" "}
+                    <Gauge size={14} />
                     <span>
-                      {filteredJobs.length - visibleJobs.length} remaining
+                      {format === "audio"
+                        ? audioLabel(settings.audio_format)
+                        : qualityLabel(quality)}
                     </span>
+                    <ChevronDown size={13} />
                   </button>
-                )}
+                  {qualityOpen && (
+                    <QualityMenu
+                      format={format}
+                      quality={quality}
+                      audioFormat={settings.audio_format}
+                      onVideo={(value) => {
+                        setQuality(value);
+                        setQualityOpen(false);
+                      }}
+                      onAudio={(value) => {
+                        void saveSettings({ ...settings, audio_format: value });
+                        setQualityOpen(false);
+                      }}
+                      onClose={() => setQualityOpen(false)}
+                    />
+                  )}
+                </div>
+                <button
+                  className="folder-pill"
+                  onClick={chooseFolder}
+                  title={settings.output_dir}
+                >
+                  <Folder size={14} />
+                  <span>
+                    {settings.output_dir.split("/").pop() || "Downloads"}
+                  </span>
+                </button>
               </div>
-            )}
-          </section>
-          {jobs.length > 0 && (
-            <footer className="action-bar">
-              <div className="queue-summary">
-                <span className={active ? "pulse-dot" : "dot"} />
-                {active
-                  ? `${active} active${waitingCount ? ` · ${waitingCount} waiting` : ""}`
-                  : waitingCount
-                    ? `${waitingCount} ready to download`
-                    : `${completed} complete`}
+            </section>
+            <section className="queue-section">
+              <div className="queue-head">
+                <div>
+                  <h2>Queue</h2>
+                  <span>
+                    {jobs.length
+                      ? `${jobs.length} ${jobs.length === 1 ? "item" : "items"}`
+                      : "Ready when you are"}
+                  </span>
+                </div>
+                <div className="queue-actions">
+                  {jobs.length > 0 && (
+                    <div className="filters">
+                      {(["all", "active", "done"] as const).map((filter) => (
+                        <button
+                          key={filter}
+                          className={activeFilter === filter ? "active" : ""}
+                          onClick={() => setActiveFilter(filter)}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {jobs.length > 0 && (
+                    <button
+                      className="text-button danger"
+                      onClick={() =>
+                        setJobs((current) =>
+                          current.filter((job) =>
+                            [
+                              "queued",
+                              "downloading",
+                              "paused",
+                              "processing",
+                            ].includes(job.status),
+                          ),
+                        )
+                      }
+                    >
+                      <Trash2 size={14} />
+                      Clear inactive
+                    </button>
+                  )}
+                </div>
               </div>
-              <button
-                className="download-button"
-                disabled={!waitingCount || submitting || active > 0}
-                onClick={startQueue}
-              >
-                {submitting ? (
-                  <LoaderCircle className="spin" size={17} />
-                ) : (
-                  <Download size={17} />
-                )}{" "}
-                {submitting
-                  ? "Starting queue…"
-                  : active && waitingCount
-                    ? "Waiting for current batch…"
+              {!jobs.length ? (
+                <EmptyState onFocus={() => inputRef.current?.focus()} />
+              ) : (
+                <div className="job-list">
+                  {filteredJobs.map((job) => (
+                    <JobRow
+                      key={job.id}
+                      job={job}
+                      onRemove={() =>
+                        setJobs((current) =>
+                          current.filter((item) => item.id !== job.id),
+                        )
+                      }
+                      onCancel={() => void jobAction("cancel_download", job.id)}
+                      onPause={() => void jobAction("pause_download", job.id)}
+                      onResume={() => void jobAction("resume_download", job.id)}
+                      onReveal={() =>
+                        job.outputPath && void reveal(job.outputPath)
+                      }
+                      onRetry={() =>
+                        setJobs((current) =>
+                          current.map((item) =>
+                            item.id === job.id
+                              ? {
+                                  ...item,
+                                  status: "waiting",
+                                  progress: 0,
+                                  error: undefined,
+                                  errorKind: undefined,
+                                  cookieBrowser:
+                                    item.errorKind === "auth_required"
+                                      ? "chrome"
+                                      : item.cookieBrowser,
+                                  quality:
+                                    item.errorKind === "no_compatible_format"
+                                      ? "best"
+                                      : item.quality,
+                                  audioFormat:
+                                    item.errorKind === "no_compatible_format"
+                                      ? "original"
+                                      : item.audioFormat,
+                                }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+            {jobs.length > 0 && (
+              <footer className="action-bar">
+                <div className="queue-summary">
+                  <span className={active ? "pulse-dot" : "dot"} />
+                  {active
+                    ? `${active} active${waitingCount ? ` · ${waitingCount} waiting` : ""}`
                     : waitingCount
-                      ? `Download ${waitingCount} ${waitingCount === 1 ? "item" : "items"}`
-                      : "All done"}
-              </button>
-            </footer>
-          )}
-        </>
-      ) : (
-        <HistoryView
-          history={history}
-          onReveal={(path) => void reveal(path)}
-          onClear={async () => {
-            try {
-              await invoke("clear_history");
-              setHistory([]);
-            } catch (error) {
-              setMessage({ kind: "error", text: String(error) });
-            }
-          }}
-        />
-      )}
+                      ? `${waitingCount} ready to download`
+                      : `${completed} complete`}
+                </div>
+                <button
+                  className="download-button"
+                  disabled={!waitingCount || submitting || active > 0}
+                  onClick={startQueue}
+                >
+                  {submitting ? (
+                    <LoaderCircle className="spin" size={17} />
+                  ) : (
+                    <Download size={17} />
+                  )}{" "}
+                  {submitting
+                    ? "Starting queue…"
+                    : active && waitingCount
+                      ? "Waiting for current batch…"
+                      : waitingCount
+                        ? `Download ${waitingCount} ${waitingCount === 1 ? "item" : "items"}`
+                        : "All done"}
+                </button>
+              </footer>
+            )}
+          </>
+        ) : (
+          <HistoryView
+            history={history}
+            onReveal={(path) => void reveal(path)}
+            onClear={async () => {
+              try {
+                await invoke("clear_history");
+                setHistory([]);
+              } catch (error) {
+                setMessage({ kind: "error", text: String(error) });
+              }
+            }}
+          />
+        )}
+      </div>
 
       {playlist && (
         <PlaylistPreview

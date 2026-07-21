@@ -1,8 +1,16 @@
 node_modules
 dist
+out
 src-tauri/target
 src-tauri/gen
 .agents
 .codex
 .DS_Store
 *.log
+.env
+.env.*
+!.env.example
+*.key
+*.p12
+*.pem
+public/trailer-score.wav

@@ -1,73 +1,96 @@
 # MacTube
 
-A minimal, macOS-first video, playlist, and music downloader built with Tauri 2, React, Rust, and [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+[![CI](https://github.com/Lxvi101/mactube/actions/workflows/ci.yml/badge.svg)](https://github.com/Lxvi101/mactube/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-567C8D.svg)](LICENSE)
+[![macOS](https://img.shields.io/badge/macOS-11%2B-2F4156.svg)](#requirements)
 
-## What it does
+**A private, macOS-first downloader for videos, playlists, and audio.** MacTube wraps [yt-dlp](https://github.com/yt-dlp/yt-dlp) and FFmpeg in a focused native desktop experience built with Tauri, Rust, and React.
 
-- Adds single videos or complete playlists from any site supported by yt-dlp.
-- Opens playlists in a searchable preview with select-all, numeric ranges, and per-item video/audio quality.
-- Downloads the best available version or a natural resolution preset; video and audio streams are selected and merged automatically.
-- Extracts full-quality source audio to MP3, M4A, Opus, or lossless FLAC.
-- Runs a low-memory queue with 1–4 simultaneous jobs, live speed/ETA, safe cancellation, pause/resume, retries, restart recovery, and playlist folders.
-- Embeds metadata and thumbnails and can remove SponsorBlock segments.
-- Accepts one-click jobs from the included Chrome extension through `mactube://` links.
-- Can ask yt-dlp to use the local Chrome profile for videos the signed-in user can access; cookie values never enter the deep link.
-- Keeps a local download history, skips duplicates, reveals saved files in Finder, and sends native completion/failure notifications.
-- Distinguishes sign-in failures, DRM protection, and missing compatible non-DRM formats with tailored recovery actions.
-- Lives quietly in the macOS menu bar; closing the window hides it while downloads continue.
-- Shows live aggregate progress in the menu-bar title and per-download progress bars in its menu.
-- Can launch hidden at login when the opt-in preference is enabled.
-- Stores preferences locally and includes no analytics.
+![MacTube queue interface](docs/images/mactube-queue.webp)
 
-## macOS development
+> [!IMPORTANT]
+> Only download media you own or have permission to save. You are responsible for following the source website's terms and applicable law. MacTube is not affiliated with YouTube or Google.
 
-Install prerequisites:
+## Highlights
+
+- Download individual videos or complete playlists from sites supported by yt-dlp.
+- Choose best available quality or 4K, 1440p, 1080p, 720p, and 480p presets.
+- Extract audio to MP3, M4A, Opus, or lossless FLAC.
+- Run a persistent, low-memory queue with pause, resume, retry, cancellation, and 1–4 concurrent jobs.
+- Search and select playlist items with ranges and per-item format choices.
+- Embed metadata and thumbnails, optionally removing SponsorBlock segments.
+- Send links from the included Chrome extension through the local `mactube://` URL scheme.
+- Use a local Chrome profile for content your signed-in account may access. Cookies remain on your Mac.
+- Keep local history, reveal completed files in Finder, and receive native notifications.
+- Continue downloading from the menu bar after the main window closes.
+- No accounts, analytics, or cloud service.
+
+## Requirements
+
+- macOS 11 or newer
+- [Homebrew](https://brew.sh/)
+- Node.js 20 or newer and pnpm 10
+- Rust stable toolchain
+- yt-dlp and FFmpeg
+
+Install the external tools:
 
 ```sh
 xcode-select --install
-brew install node rust yt-dlp ffmpeg
+brew install node pnpm rust yt-dlp ffmpeg
 ```
 
-Then run:
+## Run locally
 
 ```sh
-npm install
-npm run tauri dev
+git clone https://github.com/Lxvi101/mactube.git
+cd mactube
+pnpm install
+pnpm tauri dev
 ```
 
-Build a signed-ready `.app` and `.dmg` with:
+Create a local `.app` and `.dmg` with:
 
 ```sh
-npm run tauri build
+pnpm tauri build
 ```
 
-`yt-dlp` and `ffmpeg` are intentionally resolved from the system path in development. Set `MACTUBE_YTDLP` to an explicit binary path if desired. For distribution to people without Homebrew, place signed universal `yt-dlp` and `ffmpeg` sidecars in the app bundle and update `ytdlp_binary()` to resolve the bundled resource first.
+MacTube checks common Homebrew locations as well as `PATH`. Set `MACTUBE_YTDLP` to an explicit yt-dlp binary path when needed. The current development build expects yt-dlp and FFmpeg to be installed on the host; distributing self-contained signed sidecars is a separate packaging task.
 
 ## Chrome extension
 
 1. Build and launch MacTube once so macOS registers the `mactube://` scheme.
 2. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
-3. Select the `extension` directory.
-4. Pin MacTube. On a video page, click it and choose video or full-quality audio. The same actions are available from the page/link context menu.
+3. Select this repository's `extension` directory.
+4. Pin MacTube and use its toolbar or context-menu actions on a supported page.
 
-Chrome may ask once whether it may open MacTube. The extension never reads browsing history; it only receives the active URL after an explicit click.
+The extension only passes the active URL after an explicit action. Enabling **Use Chrome sign-in** makes yt-dlp read the local Chrome profile directly; the extension never copies cookie values. Chrome may need to be closed briefly while its cookie database is locked. DRM-protected media is unsupported.
 
-Enable **Use Chrome sign-in** in the extension popup for private, age-restricted, or member-accessible videos. MacTube passes `--cookies-from-browser chrome` to yt-dlp locally; the extension does not copy or transmit cookies. Chrome may need to be closed briefly if its cookie database is locked. DRM-protected media remains unsupported.
-
-## Verification
+## Development
 
 ```sh
-npm test
-npm run build
-cd src-tauri
-cargo test
-cargo clippy --all-targets -- -D warnings
+pnpm test             # React and queue tests
+pnpm build            # Type-check and bundle the web UI
+cargo fmt --check --manifest-path src-tauri/Cargo.toml
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --locked -- -D warnings
+cargo test --manifest-path src-tauri/Cargo.toml --locked
 ```
 
-## Linux-side verification
+The launch trailer is a reproducible Remotion project:
 
-The web interface can be previewed on Debian with `npm run dev`. Native window behavior, URL-scheme registration, signing, and DMG packaging must be validated on macOS.
+```sh
+pnpm video:studio
+pnpm video:render
+```
 
-### Menu-bar behavior
+The soundtrack is generated locally with FFmpeg before each render. Rendered media is written to `out/` and is not committed.
 
-While work is active, the menu bar reads like `↓ 2 · 47%`. Opening it shows up to five current titles with compact ten-step progress bars. Double-click the icon or choose **Open MacTube** to restore the window. The normal window close button only hides MacTube; **Quit MacTube** in the menu exits it completely.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contributor workflow, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a guided codebase tour, and [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+## Privacy and security
+
+Settings and download history are stored locally in the app configuration directory. MacTube does not operate a server and contains no telemetry. Please report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
+## License
+
+MacTube is available under the [MIT License](LICENSE).

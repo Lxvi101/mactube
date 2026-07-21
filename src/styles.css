@@ -11,7 +11,7 @@
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 2px solid #ef5b3f;
+  outline: 2px solid #567c8d;
   outline-offset: 2px;
 }
 .playlist-list article {
@@ -25,7 +25,7 @@ select:focus-visible {
   gap: 6px;
 }
 .view-tabs {
-  background: #ebe9e3;
+  background: #c8d9e6;
   padding: 3px;
   border-radius: 10px;
 }
@@ -44,7 +44,7 @@ select:focus-visible {
 }
 .view-tabs button.active {
   background: #fff;
-  color: #252522;
+  color: #2f4156;
   box-shadow: 0 1px 3px #00000012;
 }
 .view-tabs b {
@@ -52,7 +52,7 @@ select:focus-visible {
   height: 16px;
   padding: 0 4px;
   border-radius: 8px;
-  background: #ef5b3f;
+  background: #567c8d;
   color: #fff;
   font-size: 8px;
   display: grid;
@@ -97,7 +97,7 @@ select:focus-visible {
   border: 1px solid #d9d6cf;
   background: #fff;
   border-radius: 11px;
-  box-shadow: 0 12px 32px #25252220;
+  box-shadow: 0 12px 32px #2f415620;
   font-size: 11px;
   animation: toastIn 0.22s ease;
 }
@@ -151,7 +151,7 @@ select:focus-visible {
 .progress-track.indeterminate span {
   width: 38% !important;
   animation: indeterminate 1.15s ease-in-out infinite;
-  background: linear-gradient(90deg, #ef5b3f99, #ef5b3f, #ef5b3f99);
+  background: #86d9f7;
 }
 @keyframes indeterminate {
   0% {
@@ -219,7 +219,7 @@ select:focus-visible {
 .playlist-modal {
   width: min(920px, 100%);
   height: min(760px, calc(100vh - 60px));
-  background: #f8f7f3;
+  background: #f5efeb;
   border: 1px solid #ffffff80;
   border-radius: 20px;
   box-shadow: 0 30px 80px #0004;
@@ -353,7 +353,7 @@ select:focus-visible {
   font-size: 10px;
 }
 .playlist-list input[type="checkbox"] {
-  accent-color: #ef5b3f;
+  accent-color: #567c8d;
 }
 .mini-thumb {
   width: 66px;
@@ -558,6 +558,7 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -589,7 +590,7 @@ select:focus-visible {
   cursor: pointer;
 }
 .quality-trigger span {
-  color: #252522;
+  color: #2f4156;
   min-width: 110px;
   text-align: left;
 }
@@ -612,8 +613,8 @@ select:focus-visible {
   background: #fbfaf7;
   padding: 8px;
   box-shadow:
-    0 20px 50px #25252226,
-    0 3px 10px #25252212;
+    0 20px 50px #2f415626,
+    0 3px 10px #2f415612;
   text-align: left;
   animation: menuIn 0.14s ease;
 }
@@ -638,10 +639,11 @@ select:focus-visible {
 }
 .quality-options {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
 }
 .quality-options button {
+  min-width: 0;
   border: 1px solid transparent;
   background: transparent;
   border-radius: 10px;
@@ -655,11 +657,11 @@ select:focus-visible {
   cursor: pointer;
 }
 .quality-options button:hover {
-  background: #f0eee8;
+  background: #e7eff5;
 }
 .quality-options button.selected {
-  background: #fff4f0;
-  border-color: #f0c4b9;
+  background: #edf4f8;
+  border-color: #9eb9c7;
 }
 .quality-options button > i {
   width: 16px;
@@ -671,13 +673,14 @@ select:focus-visible {
   color: white;
 }
 .quality-options button.selected > i {
-  background: #ef5b3f;
-  border-color: #ef5b3f;
+  background: #567c8d;
+  border-color: #567c8d;
 }
 .quality-options button > span {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 .quality-options button strong {
   font-size: 11px;
@@ -685,7 +688,7 @@ select:focus-visible {
 .quality-options button small {
   font-size: 9px;
   color: #918e86;
-  white-space: nowrap;
+  line-height: 1.25;
 }
 .quality-options button > b {
   grid-column: 2;
@@ -714,16 +717,17 @@ select:focus-visible {
     BlinkMacSystemFont,
     "SF Pro Text",
     sans-serif;
-  color: #252522;
-  background: #f5f4f0;
+  color: #2f4156;
+  background: #f5efeb;
   font-synthesis: none;
-  --ink: #252522;
+  --ink: #2f4156;
   --muted: #77756e;
   --line: #dfddd6;
-  --cream: #f5f4f0;
-  --card: #fbfaf7;
-  --accent: #ef5b3f;
-  --accent-dark: #dc452b;
+  --cream: #f5efeb;
+  --card: #ffffff;
+  --accent: #567c8d;
+  --accent-dark: #2f4156;
+  --sky: #c8d9e6;
   --green: #399565;
 }
 * {
@@ -733,8 +737,7 @@ body {
   margin: 0;
   min-width: 680px;
   min-height: 620px;
-  background:
-    radial-gradient(circle at 50% -15%, #fff 0, transparent 38%), var(--cream);
+  background: var(--cream);
   -webkit-font-smoothing: antialiased;
 }
 button,
@@ -754,7 +757,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 26px;
+  padding: 0 26px 0 78px;
   border-bottom: 1px solid rgba(37, 37, 34, 0.08);
   user-select: none;
 }
@@ -763,15 +766,18 @@ main {
   align-items: center;
   gap: 10px;
   font: 700 15px Manrope;
+  pointer-events: none;
 }
 .brand-mark {
   width: 28px;
   height: 28px;
-  border-radius: 9px;
-  background: var(--ink);
-  color: white;
   display: grid;
   place-items: center;
+}
+.brand-mark img {
+  width: 27px;
+  height: 27px;
+  display: block;
 }
 .icon-button {
   width: 34px;
@@ -784,7 +790,7 @@ main {
   cursor: pointer;
 }
 .icon-button:hover {
-  background: #e9e7e1;
+  background: #c8d9e6;
 }
 .hero {
   max-width: 760px;
@@ -909,7 +915,7 @@ main {
 }
 .segmented {
   display: flex;
-  background: #e9e7e1;
+  background: #c8d9e6;
   padding: 3px;
   border-radius: 10px;
 }
@@ -997,7 +1003,7 @@ main {
 }
 .filters {
   padding: 3px;
-  background: #ebe9e3;
+  background: #c8d9e6;
   border-radius: 9px;
 }
 .filters button {
@@ -1012,7 +1018,7 @@ main {
 }
 .filters button.active {
   background: #fff;
-  color: #252522;
+  color: #2f4156;
   box-shadow: 0 1px 2px #00000012;
 }
 .text-button {
@@ -1058,7 +1064,7 @@ main {
 .stack-card.front {
   background: #fbfaf7;
   top: 4px;
-  box-shadow: 0 7px 14px #25252212;
+  box-shadow: 0 7px 14px #2f415612;
   padding: 13px;
   display: grid;
   grid-template-columns: 26px 1fr;
@@ -1130,7 +1136,7 @@ main {
   height: 100%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #e4e0d5, #cac5b8);
+  background: rgba(200, 217, 230, 0.18);
   color: #777267;
 }
 .duration {
@@ -1271,7 +1277,7 @@ main {
   cursor: pointer;
 }
 .job-controls button:hover {
-  background: #e9e7e1;
+  background: #c8d9e6;
   color: #4d4b46;
 }
 .action-bar {
@@ -1343,7 +1349,7 @@ main {
 .settings-sheet {
   height: 100%;
   width: 390px;
-  background: #f8f7f3;
+  background: #f5efeb;
   box-shadow: -12px 0 40px #0002;
   padding: 25px;
   display: flex;
@@ -1447,9 +1453,9 @@ main {
   cursor: pointer;
 }
 .format-grid button.active {
-  background: #252522;
+  background: #2f4156;
   color: white;
-  border-color: #252522;
+  border-color: #2f4156;
 }
 .toggles {
   padding: 8px 0;
@@ -1520,7 +1526,7 @@ main {
 }
 .sheet-foot button {
   border: 0;
-  background: #252522;
+  background: #2f4156;
   color: white;
   border-radius: 9px;
   padding: 8px 18px;

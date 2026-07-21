@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    ffi::OsString,
     path::{Path, PathBuf},
     process::Stdio,
     sync::{Arc, Mutex as StdMutex},
@@ -232,8 +233,50 @@ fn reveal_in_finder(path: String) -> Result<(), String> {
     }
 }
 
-fn ytdlp_binary() -> String {
-    std::env::var("MACTUBE_YTDLP").unwrap_or_else(|_| "yt-dlp".into())
+#[cfg(target_os = "macos")]
+const GUI_BINARY_DIRS: [&str; 3] = ["/opt/homebrew/bin", "/usr/local/bin", "/opt/local/bin"];
+
+fn binary_path(environment_override: Option<&str>, name: &str) -> PathBuf {
+    if let Some(path) = environment_override
+        .and_then(std::env::var_os)
+        .filter(|path| !path.is_empty())
+    {
+        return PathBuf::from(path);
+    }
+
+    #[cfg(target_os = "macos")]
+    for directory in GUI_BINARY_DIRS {
+        let candidate = Path::new(directory).join(name);
+        if candidate.is_file() {
+            return candidate;
+        }
+    }
+
+    PathBuf::from(name)
+}
+
+fn dependency_search_path() -> OsString {
+    let mut paths = Vec::new();
+    #[cfg(target_os = "macos")]
+    paths.extend(GUI_BINARY_DIRS.into_iter().map(PathBuf::from));
+    if let Some(current) = std::env::var_os("PATH") {
+        paths.extend(std::env::split_paths(&current));
+    }
+    std::env::join_paths(paths).unwrap_or_else(|_| std::env::var_os("PATH").unwrap_or_default())
+}
+
+fn dependency_command(binary: PathBuf) -> Command {
+    let mut command = Command::new(binary);
+    command.env("PATH", dependency_search_path());
+    command
+}
+
+fn ytdlp_binary() -> PathBuf {
+    binary_path(Some("MACTUBE_YTDLP"), "yt-dlp")
+}
+
+fn ffmpeg_binary() -> PathBuf {
+    binary_path(None, "ffmpeg")
 }
 
 fn ytdlp_error(error: std::io::Error) -> String {
@@ -246,8 +289,14 @@ fn ytdlp_error(error: std::io::Error) -> String {
 
 #[tauri::command]
 async fn check_dependencies() -> DependencyStatus {
-    let ytdlp = Command::new(ytdlp_binary()).arg("--version").output().await;
-    let ffmpeg = Command::new("ffmpeg").arg("-version").output().await;
+    let ytdlp = dependency_command(ytdlp_binary())
+        .arg("--version")
+        .output()
+        .await;
+    let ffmpeg = dependency_command(ffmpeg_binary())
+        .arg("-version")
+        .output()
+        .await;
     DependencyStatus {
         ytdlp: ytdlp.as_ref().is_ok_and(|output| output.status.success()),
         ffmpeg: ffmpeg.as_ref().is_ok_and(|output| output.status.success()),
@@ -286,7 +335,7 @@ async fn fetch_metadata(
         args.extend(["--cookies-from-browser".into(), "chrome".into()]);
     }
     args.extend(["--".into(), url.clone()]);
-    let output = Command::new(ytdlp_binary())
+    let output = dependency_command(ytdlp_binary())
         .args(args)
         .output()
         .await
@@ -462,23 +511,8 @@ fn append_menu_item(
 }
 
 fn tray_icon() -> Image<'static> {
-    let size = 18usize;
-    let mut rgba = vec![0u8; size * size * 4];
-    let mut mark = |x: usize, y: usize| {
-        let offset = (y * size + x) * 4;
-        rgba[offset..offset + 4].copy_from_slice(&[0, 0, 0, 255]);
-    };
-    for y in 2..12 {
-        for x in 8..11 {
-            mark(x, y);
-        }
-    }
-    for step in 0..5 {
-        for x in (5 + step)..=(13 - step) {
-            mark(x, 10 + step);
-        }
-    }
-    Image::new_owned(rgba, size as u32, size as u32)
+    Image::from_bytes(include_bytes!("../icons/tray-template.png"))
+        .expect("embedded tray icon should be a valid PNG")
 }
 
 fn emit_progress(app: &AppHandle, event: ProgressEvent) {
@@ -773,7 +807,7 @@ async fn run_download(
     }
     args.extend(["--no-playlist".into(), "--".into(), request.url.clone()]);
 
-    let mut command = Command::new(ytdlp_binary());
+    let mut command = dependency_command(ytdlp_binary());
     command
         .args(&args)
         .stdout(Stdio::piped())

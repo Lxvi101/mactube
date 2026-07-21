@@ -2,6 +2,22 @@
   "name": "mactube",
   "private": true,
   "version": "0.1.0",
+  "description": "A private, macOS-first video, playlist, and audio downloader.",
+  "license": "MIT",
+  "author": "Lxvi101",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lxvi101/mactube.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Lxvi101/mactube/issues"
+  },
+  "homepage": "https://github.com/Lxvi101/mactube#readme",
+  "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +26,14 @@
     "format": "prettier --write src extension *.json *.ts *.md",
     "format:check": "prettier --check src extension *.json *.ts *.md",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "video:audio": "./scripts/generate-trailer-score.sh",
+    "prevideo:studio": "pnpm video:audio",
+    "video:studio": "remotion studio remotion/index.ts",
+    "prevideo:render": "pnpm video:audio",
+    "video:render": "remotion render remotion/index.ts MacTubeLaunch out/mactube-x-launch.mp4 --codec=h264 --crf=16",
+    "prevideo:poster": "pnpm video:audio",
+    "video:poster": "remotion still remotion/index.ts MacTubeLaunch out/mactube-x-launch-poster.png --frame=570"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.7.0",
@@ -19,11 +42,13 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@remotion/cli": "^4.0.495",
     "@tauri-apps/cli": "^2.7.1",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "prettier": "^3.9.5",
+    "remotion": "^4.0.495",
     "typescript": "~5.6.3",
     "vite": "^6.0.7",
     "vitest": "^4.1.10"

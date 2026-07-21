@@ -5,8 +5,8 @@ body {
   width: 296px;
   margin: 0;
   padding: 14px;
-  background: #f8f7f3;
-  color: #252522;
+  background: #f5efeb;
+  color: #2f4156;
   font:
     12px -apple-system,
     BlinkMacSystemFont,
@@ -22,13 +22,12 @@ header {
 .mark {
   width: 29px;
   height: 29px;
-  border-radius: 9px;
-  background: #252522;
-  color: white;
   display: grid;
   place-items: center;
-  font-weight: 700;
-  font-size: 16px;
+}
+.mark img {
+  width: 28px;
+  height: 28px;
 }
 header div:last-child {
   display: flex;
@@ -88,7 +87,7 @@ header span {
   transition: 0.2s;
 }
 .auth input:checked + i {
-  background: #ef5b3f;
+  background: #567c8d;
 }
 .auth input:checked + i:after {
   transform: translateX(12px);
@@ -106,11 +105,11 @@ button {
   text-align: left;
   padding: 8px 11px;
   cursor: pointer;
-  color: #252522;
+  color: #2f4156;
 }
 button:hover:not(:disabled) {
-  border-color: #ef9a88;
-  background: #fff9f7;
+  border-color: #8faebb;
+  background: #f3f8fa;
 }
 button:disabled {
   opacity: 0.5;
@@ -120,11 +119,11 @@ button i {
   width: 29px;
   height: 29px;
   border-radius: 8px;
-  background: #f0eee8;
+  background: #c8d9e6;
   display: grid;
   place-items: center;
   font-style: normal;
-  color: #ef5b3f;
+  color: #567c8d;
 }
 button span {
   display: flex;
@@ -156,7 +155,7 @@ button b {
   width: 7px;
   height: 7px;
   margin-right: 5px;
-  border: 1px solid #ef5b3f;
+  border: 1px solid #567c8d;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
