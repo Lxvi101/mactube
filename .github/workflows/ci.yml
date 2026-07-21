@@ -17,7 +17,7 @@ jobs:
     name: Frontend
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -34,7 +34,7 @@ jobs:
     name: Native
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Install stable Rust
         run: rustup toolchain install stable --profile minimal --component rustfmt,clippy
       - name: Check formatting
