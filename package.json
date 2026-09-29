@@ -36,21 +36,21 @@
     "video:poster": "remotion still remotion/index.ts MacTubeLaunch out/mactube-x-launch-poster.png --frame=570"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.7.0",
-    "lucide-react": "^0.468.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@tauri-apps/api": "^2.12.0",
+    "lucide-react": "^1.48.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "@remotion/cli": "^4.0.495",
-    "@tauri-apps/cli": "^2.7.1",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "prettier": "^3.9.5",
-    "remotion": "^4.0.495",
-    "typescript": "~5.6.3",
-    "vite": "^6.0.7",
-    "vitest": "^4.1.10"
+    "@remotion/cli": "^4.0.529",
+    "@tauri-apps/cli": "^2.12.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "prettier": "^3.9.9",
+    "remotion": "^4.0.529",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
   }
 }
